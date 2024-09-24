@@ -1,0 +1,42 @@
+from flask import Flask, render_template, request, redirect, url_for
+import sqlite3
+
+app = Flask(__name__)
+
+# Conectar ao banco de dados
+def get_db_connection():
+    conn = sqlite3.connect('atlas_shop.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@app.route('/')
+def index():
+    conn = get_db_connection()
+    produtos = conn.execute('SELECT * FROM produtos').fetchall()
+    conn.close()
+    return render_template('index.html', produtos=produtos)
+
+@app.route('/comprar/<int:produto_id>')
+def comprar(produto_id):
+    conn = get_db_connection()
+    produto = conn.execute('SELECT * FROM produtos WHERE id = ?', (produto_id,)).fetchone()
+    conn.close()
+    return render_template('comprar.html', produto=produto)
+
+@app.route('/confirmar_compra', methods=['POST'])
+def confirmar_compra():
+    produto_id = request.form['produto_id']
+    quantidade = int(request.form['quantidade'])
+    
+    conn = get_db_connection()
+    produto = conn.execute('SELECT * FROM produtos WHERE id = ?', (produto_id,)).fetchone()
+    
+    novo_estoque = produto['estoque'] - quantidade
+    conn.execute('UPDATE produtos SET estoque = ? WHERE id = ?', (novo_estoque, produto_id))
+    conn.commit()
+    conn.close()
+    
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
