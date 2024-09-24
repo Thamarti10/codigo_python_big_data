@@ -1,0 +1,48 @@
+import socket
+import threading
+
+# Configurações do servidor de chat
+SERVER = "127.0.0.1"
+PORT = 5555
+ADDR = (SERVER, PORT)
+
+# Lista para armazenar os clientes conectados
+clients = []
+
+# Função para gerenciar as mensagens enviadas pelos clientes
+def broadcast(message, client_socket):
+    for client in clients:
+        if client != client_socket:
+            try:
+                client.send(message)
+            except:
+                clients.remove(client)
+
+# Função para gerenciar cada conexão
+def handle_client(client_socket):
+    while True:
+        try:
+            message = client_socket.recv(1024)
+            broadcast(message, client_socket)
+        except:
+            clients.remove(client_socket)
+            break
+
+# Configurando o servidor
+def start_server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(ADDR)
+    server_socket.listen()
+    print(f"Servidor de chat iniciado em {SERVER}:{PORT}")
+    
+    while True:
+        client_socket, addr = server_socket.accept()
+        print(f"Nova conexão de {addr}")
+        clients.append(client_socket)
+        
+        # Iniciar thread para lidar com o cliente
+        thread = threading.Thread(target=handle_client, args=(client_socket,))
+        thread.start()
+
+# Iniciar servidor
+start_server()
