@@ -1,0 +1,55 @@
+import sqlite3
+import pandas as pd
+
+# Conectar ao banco de dados SQLite
+conn = sqlite3.connect('atlas_shop.db')
+cursor = conn.cursor()
+
+# Criar tabela de clientes
+cursor.execute('''CREATE TABLE IF NOT EXISTS clientes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL,
+    telefone TEXT NOT NULL)''')
+
+# Criar tabela de produtos
+cursor.execute('''CREATE TABLE IF NOT EXISTS produtos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    preco REAL NOT NULL,
+    estoque INTEGER NOT NULL)''')
+
+# Função para adicionar cliente
+def adicionar_cliente(nome, email, telefone):
+    cursor.execute('''INSERT INTO clientes (nome, email, telefone)
+                      VALUES (?, ?, ?)''', (nome, email, telefone))
+    conn.commit()
+
+# Função para adicionar produto
+def adicionar_produto(nome, preco, estoque):
+    cursor.execute('''INSERT INTO produtos (nome, preco, estoque)
+                      VALUES (?, ?, ?)''', (nome, preco, estoque))
+    conn.commit()
+
+# Função para listar clientes
+def listar_clientes():
+    df = pd.read_sql_query("SELECT * FROM clientes", conn)
+    print(df)
+
+# Função para listar produtos
+def listar_produtos():
+    df = pd.read_sql_query("SELECT * FROM produtos", conn)
+    print(df)
+
+# Exemplo de uso
+adicionar_cliente('João Silva', 'joao@gmail.com', '12345-6789')
+adicionar_produto('Celular Samsung', 1500.00, 10)
+
+print("Clientes cadastrados:")
+listar_clientes()
+
+print("Produtos cadastrados:")
+listar_produtos()
+
+# Fechar conexão
+conn.close()
