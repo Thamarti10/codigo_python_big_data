@@ -1,0 +1,34 @@
+import socket
+import threading
+
+# Configurações do cliente de chat
+SERVER = "127.0.0.1"
+PORT = 5555
+ADDR = (SERVER, PORT)
+
+# Função para receber mensagens do servidor
+def receive_messages(client_socket):
+    while True:
+        try:
+            message = client_socket.recv(1024).decode()
+            print(message)
+        except:
+            print("Conexão encerrada.")
+            break
+
+# Conectar ao servidor
+def start_client():
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect(ADDR)
+    
+    # Iniciar thread para receber mensagens
+    thread = threading.Thread(target=receive_messages, args=(client_socket,))
+    thread.start()
+
+    # Enviar mensagens
+    while True:
+        message = input("")
+        client_socket.send(message.encode())
+
+# Iniciar cliente
+start_client()
